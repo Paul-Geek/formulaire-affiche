@@ -1,997 +1,266 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  <meta charset="UTF-8">
+  <title>Générateur de Bulletins de Vote</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* --- CSS Vanilla optimisé WordPress/Elementor --- */
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .wp-ballot-generator {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    textarea {
+      min-height: 80px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #ballotPreview {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #ballot {
+      background: white;
+      border: 2px solid #ccc;
+      margin: auto;
+      position: relative;
+      overflow: hidden;
+      width: 400px;
+      height: 280px;
+    }
+    #ballotImage {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+    }
+    .resize-handle {
+      width: 12px;
+      height: 12px;
+      background: #007bff;
+      border-radius: 50%;
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      cursor: se-resize;
+    }
+    .crop-marks .crop-mark {
+      position: absolute;
+      background: black;
+    }
+    .crop-marks .crop-mark.horizontal {
+      width: 15mm;
+      height: 1px;
+    }
+    .crop-marks .crop-mark.vertical {
+      width: 1px;
+      height: 15mm;
+    }
+    .bleed-area {
+      position: absolute;
+      top: -3mm;
+      left: -3mm;
+      right: -3mm;
+      bottom: -3mm;
+      border: 1px dashed red;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="fr"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Générateur d'Affiches Politiques&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>* {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 100vh;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.container {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 1200px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 24px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 25px 50px rgba(17, 31, 73, 0.2);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 60px 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header::before {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>content: '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>right: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>bottom: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: url('data:image/svg+xml,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"&gt;&lt;defs&gt;&lt;pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"&gt;&lt;path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/&gt;&lt;/pattern&gt;&lt;/defs&gt;&lt;rect width="100" height="100" fill="url(%23grid)"/&gt;&lt;/svg&gt;');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.4;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header &gt; * {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>z-index: 1;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header h1 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 3.2rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 800;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: -0.02em;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-shadow: 0 2px 4px rgba(0,0,0,0.1);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header p {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.4rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.95;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 400;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 700px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.6;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-content {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 50px 40px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.section {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 50px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.section-title {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.8rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 3px solid #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: -0.01em;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.section-title::after {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>content: '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>bottom: -3px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 80px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 3px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 2px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Styles pour la sélection de designs */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-grid {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(4, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-option {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.4s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 3px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 8px 25px rgba(17, 31, 73, 0.08);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-option:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-8px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 20px 40px rgba(17, 31, 73, 0.15);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-option.selected {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 0 0 4px rgba(56, 182, 255, 0.2);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-5px);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-preview {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>aspect-ratio: 0.707;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-img {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>object-fit: cover;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-overlay {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>right: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>bottom: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(0,0,0,0.4);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: opacity 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.2rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-option:hover .design-overlay {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 1;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-option.selected .design-overlay {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(56, 182, 255, 0.9);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.design-title {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8fafc;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 1px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.1rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Styles pour les champs de formulaire */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-grid {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 35px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.05rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: -0.01em;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group .optional {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #64748b;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 400;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group input,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group textarea,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group select {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 16px 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8fafc;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: inherit;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group input:focus,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group textarea:focus,</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group select:focus {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>outline: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 0 0 4px rgba(56, 182, 255, 0.15);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-2px);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group textarea {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>resize: vertical;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 120px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group input[type="file"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px dashed #cbd5e0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.form-group input[type="file"]:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f0f9ff;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Styles pour les formats */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-grid {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(4, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-option {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8fafc;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-option:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-3px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 8px 20px rgba(56, 182, 255, 0.15);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-option.selected {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-3px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 12px 30px rgba(56, 182, 255, 0.3);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-option input[type="radio"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-title {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.2rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-desc {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.8;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Styles pour les couleurs */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-selector-group {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8fafc;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-input-group {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex: 1;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-input-group label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.95rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-input-group input[type="color"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 70px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 45px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-input-group input[type="text"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px 14px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Monaco', 'Menlo', monospace;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cmyk-inputs {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(4, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cmyk-inputs input {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.85rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Bouton de génération */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-section {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 60px 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8fafc;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 1px solid #e2e8f0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-section::before {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>content: '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateX(-50%);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 120px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 5px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 3px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-btn {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 22px 60px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.3rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.4s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-transform: uppercase;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 1px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-width: 350px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 8px 25px rgba(56, 182, 255, 0.25);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-btn:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-4px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 15px 40px rgba(56, 182, 255, 0.4);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #2ea3e8;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-btn:active {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-2px);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.generate-btn:disabled {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.6;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: not-allowed;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: none;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Styles pour les infos */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.info-box {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f0f9ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #38b6ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #111f49;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.95rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.6;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 15px rgba(56, 182, 255, 0.1);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.required-indicator {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #dc2626;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Responsive */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>@media (max-width: 1024px) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.design-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: repeat(2, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>@media (max-width: 768px) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.header {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>padding: 40px 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.header h1 {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>font-size: 2.5rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.form-content {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>padding: 40px 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.design-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: repeat(2, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.form-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.format-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: repeat(2, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.color-selector-group {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>@media (max-width: 480px) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.design-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.format-grid {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>grid-template-columns: 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>.generate-btn {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>min-width: 280px;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>padding: 20px 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</p>
-<p class="p2"><br></p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="form-content"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;form id="posterForm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Sélection du design --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;1. Choisissez votre design &lt;span class="required-indicator"&gt;*&lt;/span&gt;&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="design-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="design-option" data-design="1"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-preview"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;img src="https://politicae.fr/wp-content/uploads/2025/09/1.jpg" alt="Design 1" class="design-img"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="design-overlay"&gt;✓ Sélectionné&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-title"&gt;Design Moderne&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="design-option" data-design="2"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-preview"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;img src="https://politicae.fr/wp-content/uploads/2025/09/2.jpg" alt="Design 2" class="design-img"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="design-overlay"&gt;✓ Sélectionné&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-title"&gt;Design Classique&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="design-option" data-design="3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-preview"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;img src="https://politicae.fr/wp-content/uploads/2025/09/3.jpg" alt="Design 3" class="design-img"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="design-overlay"&gt;✓ Sélectionné&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-title"&gt;Design Dynamique&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="design-option" data-design="4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-preview"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;img src="https://politicae.fr/wp-content/uploads/2025/09/4.jpg" alt="Design 4" class="design-img"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="design-overlay"&gt;✓ Sélectionné&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="design-title"&gt;Design Élégant&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="info-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>💡 &lt;strong&gt;Conseil :&lt;/strong&gt; Choisissez le design qui correspond le mieux à votre image et à votre message politique.</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Informations personnelles --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;2. Informations du candidat&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="form-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="firstName"&gt;Prénom &lt;span class="required-indicator"&gt;*&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="text" id="firstName" name="firstName" placeholder="Ex: Marie" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="lastName"&gt;Nom &lt;span class="required-indicator"&gt;*&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="text" id="lastName" name="lastName" placeholder="Ex: Dupont" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Messages et textes --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;3. Messages et textes&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="form-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="slogan"&gt;Slogan &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="text" id="slogan" name="slogan" placeholder="Ex: Ensemble pour l'avenir"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="listName"&gt;Nom de la liste &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="text" id="listName" name="listName" placeholder="Ex: Liste Citoyenne"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group" style="grid-column: 1 / -1;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="customMessage"&gt;Message personnalisé &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;textarea id="customMessage" name="customMessage" placeholder="Promesses de campagne, message à la population..."&gt;&lt;/textarea&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="info-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>💬 &lt;strong&gt;Suggestions :&lt;/strong&gt; Promesses de campagne, vision pour la commune, message à la population, priorités politiques...</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Images et logos --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;4. Images et logos&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="form-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="backgroundPhoto"&gt;Photo de fond &lt;span class="required-indicator"&gt;*&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="file" id="backgroundPhoto" name="backgroundPhoto" accept="image/*" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="info-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>📸 Une photo de grande taille et de bonne qualité, si possible réalisée par un professionnel.</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="listLogo"&gt;Logo de la liste &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="file" id="listLogo" name="listLogo" accept="image/*"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="partyLogo"&gt;Logo du parti politique &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="file" id="partyLogo" name="partyLogo" accept="image/*"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Format --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;5. Format d'impression&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="format-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="format-option selected" for="formatA1"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="radio" id="formatA1" name="format" value="a1" checked&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-title"&gt;A1&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-desc"&gt;594 × 841 mm&lt;br&gt;Format officiel&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/label&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="format-option" for="formatA2"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="radio" id="formatA2" name="format" value="a2"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-title"&gt;A2&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-desc"&gt;420 × 594 mm&lt;br&gt;Format moyen&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/label&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="format-option" for="formatA3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="radio" id="formatA3" name="format" value="a3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-title"&gt;A3&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-desc"&gt;297 × 420 mm&lt;br&gt;Format compact&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/label&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;label class="format-option" for="formatA4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;input type="radio" id="formatA4" name="format" value="a4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-title"&gt;A4&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="format-desc"&gt;210 × 297 mm&lt;br&gt;Format standard&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Couleurs --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="section-title"&gt;6. Couleurs personnalisées &lt;span class="optional"&gt;(optionnel)&lt;/span&gt;&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="form-grid"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label&gt;Couleur principale&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="color-selector-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color1RGB"&gt;RVB&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="color" id="color1RGB" name="color1RGB" value="#111f49"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" id="color1RGBText" placeholder="#111f49" value="#111f49"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color1CMYK"&gt;CMJN&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="cmyk-inputs"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color1C" placeholder="C" min="0" max="100" value="85"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color1M" placeholder="M" min="0" max="100" value="75"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color1Y" placeholder="J" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color1K" placeholder="N" min="0" max="100" value="71"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label&gt;Couleur secondaire&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="color-selector-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color2RGB"&gt;RVB&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="color" id="color2RGB" name="color2RGB" value="#38b6ff"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" id="color2RGBText" placeholder="#38b6ff" value="#38b6ff"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color2CMYK"&gt;CMJN&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="cmyk-inputs"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color2C" placeholder="C" min="0" max="100" value="78"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color2M" placeholder="M" min="0" max="100" value="29"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color2Y" placeholder="J" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color2K" placeholder="N" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label&gt;Couleur d'accent&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="color-selector-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color3RGB"&gt;RVB&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="color" id="color3RGB" name="color3RGB" value="#ffffff"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" id="color3RGBText" placeholder="#ffffff" value="#ffffff"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="color-input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label for="color3CMYK"&gt;CMJN&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="cmyk-inputs"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color3C" placeholder="C" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color3M" placeholder="M" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color3Y" placeholder="J" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="color3K" placeholder="N" min="0" max="100" value="0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="info-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>🎨 &lt;strong&gt;Conseil :&lt;/strong&gt; Utilisez les valeurs RVB pour l'aperçu numérique et les impressions en petite quantité (moins de 1000 impressions). Les valeurs CMJN sont recommandées pour l'impression professionnelle en grande quantité.</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="generate-section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button type="submit" form="posterForm" class="generate-btn" id="generateBtn"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>📧 Envoyer mes demandes</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let selectedDesign = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let backgroundImageData = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let listLogoData = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let partyLogoData = null;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Gestion de la sélection de design</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.querySelectorAll('.design-option').forEach(option =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>option.addEventListener('click', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Retirer la sélection précédente</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.querySelectorAll('.design-option').forEach(opt =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>opt.classList.remove('selected');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Ajouter la sélection à l'option cliquée</p>
-<p class="p1"><span class="Apple-converted-space">                </span>this.classList.add('selected');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>selectedDesign = this.dataset.design;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Gestion des formats</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.querySelectorAll('input[name="format"]').forEach(radio =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>radio.addEventListener('change', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.querySelectorAll('.format-option').forEach(option =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>option.classList.remove('selected');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                </span>this.parentElement.classList.add('selected');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Synchronisation des couleurs RVB et texte</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function syncColorInputs() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Couleur 1</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color1RGB').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('color1RGBText').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color1RGBText').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('color1RGB').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Couleur 2</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color2RGB').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('color2RGBText').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color2RGBText').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('color2RGB').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Couleur 3</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color3RGB').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('color3RGBText').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('color3RGBText').addEventListener('input', function() {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>document.getElementById('color3RGB').value = this.value;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>syncColorInputs();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Gestion des uploads d'images</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('backgroundPhoto').addEventListener('change', function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const file = e.target.files[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (file) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const reader = new FileReader();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.onload = function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>backgroundImageData = e.target.result;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>};</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.readAsDataURL(file);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('listLogo').addEventListener('change', function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const file = e.target.files[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (file) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const reader = new FileReader();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.onload = function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>listLogoData = e.target.result;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>};</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.readAsDataURL(file);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('partyLogo').addEventListener('change', function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const file = e.target.files[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (file) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const reader = new FileReader();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.onload = function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>partyLogoData = e.target.result;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>};</p>
-<p class="p1"><span class="Apple-converted-space">                </span>reader.readAsDataURL(file);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Gestion de la soumission du formulaire</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('posterForm').addEventListener('submit', function(e) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Vérifications</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!selectedDesign) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('Veuillez sélectionner un design');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const firstName = document.getElementById('firstName').value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const lastName = document.getElementById('lastName').value.trim();</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!firstName || !lastName) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('Veuillez saisir le prénom et le nom du candidat');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!backgroundImageData) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('Veuillez sélectionner une photo de fond');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>sendEmailRequest();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>async function sendEmailRequest() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const generateBtn = document.getElementById('generateBtn');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>generateBtn.disabled = true;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>generateBtn.textContent = '📤 Envoi en cours...';</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Récupération des données du formulaire</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const formData = {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>design: selectedDesign,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>firstName: document.getElementById('firstName').value.trim(),</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>lastName: document.getElementById('lastName').value.trim(),</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>slogan: document.getElementById('slogan').value.trim(),</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>listName: document.getElementById('listName').value.trim(),</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>customMessage: document.getElementById('customMessage').value.trim(),</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>format: document.querySelector('input[name="format"]:checked').value,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// Couleurs</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color1RGB: document.getElementById('color1RGBText').value,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color1CMYK: `C:${document.getElementById('color1C').value} M:${document.getElementById('color1M').value} J:${document.getElementById('color1Y').value} N:${document.getElementById('color1K').value}`,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color2RGB: document.getElementById('color2RGBText').value,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color2CMYK: `C:${document.getElementById('color2C').value} M:${document.getElementById('color2M').value} J:${document.getElementById('color2Y').value} N:${document.getElementById('color2K').value}`,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color3RGB: document.getElementById('color3RGBText').value,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>color3CMYK: `C:${document.getElementById('color3C').value} M:${document.getElementById('color3M').value} J:${document.getElementById('color3Y').value} N:${document.getElementById('color3K').value}`</p>
-<p class="p1"><span class="Apple-converted-space">                </span>};</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Préparation des données pour Brevo</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const emailData = {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>sender: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>name: "Générateur d'Affiches",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>email: "noreply@politicae.fr"</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>to: [{</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>email: "communication@politicae.fr",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>name: "Équipe Communication"</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}],</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>subject: `Demande de création d'affiche - ${formData.firstName} ${formData.lastName}`,</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>htmlContent: `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2&gt;Nouvelle demande de création d'affiche politique&lt;/h2&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;📋 INFORMATIONS CANDIDAT&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;ul&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Prénom :&lt;/strong&gt; ${formData.firstName}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Nom :&lt;/strong&gt; ${formData.lastName}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Slogan :&lt;/strong&gt; ${formData.slogan || 'Non spécifié'}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Nom de liste :&lt;/strong&gt; ${formData.listName || 'Non spécifié'}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/ul&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;🎨 DESIGN ET FORMAT&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;ul&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Design sélectionné :&lt;/strong&gt; Design ${formData.design}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Format :&lt;/strong&gt; ${formData.format.toUpperCase()}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/ul&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;🌈 COULEURS&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div style="margin: 10px 0;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;strong&gt;Couleur principale :&lt;/strong&gt;&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- RVB : ${formData.color1RGB}&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- CMJN : ${formData.color1CMYK}</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div style="margin: 10px 0;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;strong&gt;Couleur secondaire :&lt;/strong&gt;&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- RVB : ${formData.color2RGB}&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- CMJN : ${formData.color2CMYK}</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div style="margin: 10px 0;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;strong&gt;Couleur d'accent :&lt;/strong&gt;&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- RVB : ${formData.color3RGB}&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>- CMJN : ${formData.color3CMYK}</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;💬 MESSAGE PERSONNALISÉ&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p&gt;${formData.customMessage || 'Aucun message personnalisé'}&lt;/p&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;📁 FICHIERS&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;ul&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Photo de fond :&lt;/strong&gt; ${backgroundImageData ? 'Fournie' : 'Non fournie'}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Logo de liste :&lt;/strong&gt; ${listLogoData ? 'Fourni' : 'Non fourni'}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;li&gt;&lt;strong&gt;Logo de parti :&lt;/strong&gt; ${partyLogoData ? 'Fourni' : 'Non fourni'}&lt;/li&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/ul&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;hr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p&gt;&lt;em&gt;Cette demande a été générée automatiquement depuis le formulaire de création d'affiches.&lt;/em&gt;&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`</p>
-<p class="p1"><span class="Apple-converted-space">                </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Ajout des pièces jointes si disponibles</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (backgroundImageData || listLogoData || partyLogoData) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>emailData.attachment = [];</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (backgroundImageData) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>emailData.attachment.push({</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>content: backgroundImageData.split(',')[1], // Retirer le préfixe data:image/...;base64,</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>name: `photo_fond_${formData.firstName}_${formData.lastName}.jpg`</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (listLogoData) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>emailData.attachment.push({</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>content: listLogoData.split(',')[1],</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>name: `logo_liste_${formData.firstName}_${formData.lastName}.png`</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (partyLogoData) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>emailData.attachment.push({</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>content: partyLogoData.split(',')[1],</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>name: `logo_parti_${formData.firstName}_${formData.lastName}.png`</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Envoi via Brevo API</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const response = await fetch('https://api.brevo.com/v3/smtp/email', {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>method: 'POST',</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>headers: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'Accept': 'application/json',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'Content-Type': 'application/json',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'api-key': 'VOTRE_CLE_API_BREVO' // À remplacer par votre vraie clé API</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>body: JSON.stringify(emailData)</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (response.ok) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>generateBtn.textContent = '✅ Envoyé avec succès !';</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>generateBtn.style.background = '#10b981';</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// Afficher un message de succès</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>alert('🎉 Votre demande a été envoyée avec succès ! Notre équipe vous contactera sous 24-48h pour finaliser votre affiche.');</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// Optionnel : réinitialiser le formulaire</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// document.getElementById('posterForm').reset();</p>
-<p class="p2"><span class="Apple-converted-space">                    </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>throw new Error('Erreur lors de l\'envoi');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>console.error('Erreur:', error);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>generateBtn.textContent = '❌ Erreur d\'envoi';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>generateBtn.style.background = '#dc2626';</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Fallback vers mailto en cas d'erreur</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('⚠️ Erreur technique. Redirection vers votre client email...');</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>const emailSubject = `Demande de création d'affiche - ${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const emailBody = `Veuillez joindre vos images à cet email.\n\nInformations de la demande :\n- Design : ${selectedDesign}\n- Nom : ${document.getElementById('firstName').value} ${document.getElementById('lastName').value}\n- Format : ${document.querySelector('input[name="format"]:checked').value}`;</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>const mailtoLink = `mailto:communication@politicae.fr?subject=${encodeURIComponent(emailSubject)}&amp;body=${encodeURIComponent(emailBody)}`;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>window.open(mailtoLink, '_blank');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Réinitialiser le bouton après un délai</p>
-<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>generateBtn.disabled = false;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>generateBtn.textContent = '📧 Envoyer mes demandes';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>generateBtn.style.background = '#38b6ff';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}, 3000);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Sélectionner le premier design par défaut</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.querySelector('.design-option[data-design="1"]').click();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;script&gt;(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'983191a6a5146ff0',t:'MTc1ODU0MTY2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&amp;&amp;(document.onreadystatechange=e,c())}}}})();&lt;/script&gt;&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+<div class="wp-ballot-generator">
+  <h1>Générateur de Bulletins</h1>
+
+  <div class="form-group">
+    <label for="municipalCandidates">Liste des candidats (1 par ligne)</label>
+    <textarea id="municipalCandidates"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="logoUpload">Importer un logo</label>
+    <input type="file" id="logoUpload" accept="image/*">
+  </div>
+
+  <div id="formatInfo" class="hidden form-group">
+    Format recommandé : <span id="formatText"></span>
+  </div>
+
+  <div class="form-group">
+    <button onclick="generatePDF()">📄 Générer PDF</button>
+    <button onclick="printBallot()">🖨️ Imprimer</button>
+    <button onclick="resetForm()">♻️ Réinitialiser</button>
+  </div>
+
+  <div id="ballotPreview">
+    <div id="ballot"></div>
+  </div>
+</div>
+
+<script>
+let isDragging = false;
+let isResizing = false;
+let dragOffset = { x: 0, y: 0 };
+let resizeStartSize = { width: 0, height: 0 };
+let resizeStartPos = { x: 0, y: 0 };
+
+document.getElementById("logoUpload").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => addImageToBallot(evt.target.result);
+  reader.readAsDataURL(file);
+});
+
+function addImageToBallot(src) {
+  const ballot = document.getElementById("ballot");
+  ballot.innerHTML = ""; // reset preview
+  const img = document.createElement("img");
+  img.id = "ballotImage";
+  img.src = src;
+  img.onload = () => setupImage(img);
+  ballot.appendChild(img);
+}
+
+function setupImage(img) {
+  const naturalRatio = img.naturalWidth / img.naturalHeight;
+  const baseWidth = 100;
+  const proportionalHeight = Math.round(baseWidth / naturalRatio);
+  img.style.width = baseWidth + "px";
+  img.style.height = proportionalHeight + "px";
+  img.style.left = "20px";
+  img.style.top = "20px";
+
+  const resizeHandle = document.createElement("div");
+  resizeHandle.className = "resize-handle";
+  resizeHandle.id = "resizeHandle";
+  document.getElementById("ballot").appendChild(resizeHandle);
+
+  img.addEventListener("mousedown", startDrag);
+  resizeHandle.addEventListener("mousedown", startResize);
+  updateResizeHandlePosition();
+}
+
+function updateResizeHandlePosition() {
+  const img = document.getElementById("ballotImage");
+  const handle = document.getElementById("resizeHandle");
+  if (img && handle) {
+    handle.style.left = img.offsetLeft + img.offsetWidth - 10 + "px";
+    handle.style.top = img.offsetTop + img.offsetHeight - 10 + "px";
+  }
+}
+
+function startDrag(e) {
+  if (isResizing) return;
+  isDragging = true;
+  const img = e.target;
+  dragOffset.x = e.clientX - img.getBoundingClientRect().left;
+  dragOffset.y = e.clientY - img.getBoundingClientRect().top;
+  document.addEventListener("mousemove", drag);
+  document.addEventListener("mouseup", stopDrag);
+  e.preventDefault();
+}
+function drag(e) {
+  if (!isDragging) return;
+  const img = document.getElementById("ballotImage");
+  const ballot = document.getElementById("ballot");
+  let newX = e.clientX - ballot.getBoundingClientRect().left - dragOffset.x;
+  let newY = e.clientY - ballot.getBoundingClientRect().top - dragOffset.y;
+  newX = Math.max(0, Math.min(newX, ballot.offsetWidth - img.offsetWidth));
+  newY = Math.max(0, Math.min(newY, ballot.offsetHeight - img.offsetHeight));
+  img.style.left = newX + "px";
+  img.style.top = newY + "px";
+  updateResizeHandlePosition();
+}
+function stopDrag() {
+  isDragging = false;
+  document.removeEventListener("mousemove", drag);
+  document.removeEventListener("mouseup", stopDrag);
+}
+
+function startResize(e) {
+  isResizing = true;
+  const img = document.getElementById("ballotImage");
+  resizeStartSize.width = img.offsetWidth;
+  resizeStartSize.height = img.offsetHeight;
+  resizeStartPos.x = e.clientX;
+  resizeStartPos.y = e.clientY;
+  document.addEventListener("mousemove", resize);
+  document.addEventListener("mouseup", stopResize);
+  e.preventDefault();
+}
+function resize(e) {
+  if (!isResizing) return;
+  const img = document.getElementById("ballotImage");
+  const deltaX = e.clientX - resizeStartPos.x;
+  const aspectRatio = resizeStartSize.width / resizeStartSize.height;
+  let newWidth = resizeStartSize.width + deltaX;
+  let newHeight = newWidth / aspectRatio;
+  img.style.width = Math.max(30, newWidth) + "px";
+  img.style.height = Math.max(30, newHeight) + "px";
+  updateResizeHandlePosition();
+}
+function stopResize() {
+  isResizing = false;
+  document.removeEventListener("mousemove", resize);
+  document.removeEventListener("mouseup", stopResize);
+}
+
+async function generatePDF() {
+  const ballot = document.getElementById("ballot");
+  const canvas = await html2canvas(ballot);
+  const imgData = canvas.toDataURL("image/png");
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("l", "mm", "a5");
+  pdf.addImage(imgData, "PNG", 0, 0, 210, 148);
+  pdf.save("bulletin.pdf");
+}
+function printBallot() {
+  window.print();
+}
+function resetForm() {
+  document.getElementById("municipalCandidates").value = "";
+  document.getElementById("logoUpload").value = "";
+  document.getElementById("ballot").innerHTML = "";
+}
+</script>
+
 </body>
 </html>
