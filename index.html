@@ -1,266 +1,925 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Générateur de Bulletins de Vote</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <style>
-    /* --- CSS Vanilla optimisé WordPress/Elementor --- */
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 20px;
-    }
-    .wp-ballot-generator {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    input, textarea, select, button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    textarea {
-      min-height: 80px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #ballotPreview {
-      margin-top: 20px;
-      text-align: center;
-    }
-    #ballot {
-      background: white;
-      border: 2px solid #ccc;
-      margin: auto;
-      position: relative;
-      overflow: hidden;
-      width: 400px;
-      height: 280px;
-    }
-    #ballotImage {
-      position: absolute;
-      cursor: move;
-      user-select: none;
-    }
-    .resize-handle {
-      width: 12px;
-      height: 12px;
-      background: #007bff;
-      border-radius: 50%;
-      position: absolute;
-      bottom: -6px;
-      right: -6px;
-      cursor: se-resize;
-    }
-    .crop-marks .crop-mark {
-      position: absolute;
-      background: black;
-    }
-    .crop-marks .crop-mark.horizontal {
-      width: 15mm;
-      height: 1px;
-    }
-    .crop-marks .crop-mark.vertical {
-      width: 1px;
-      height: 15mm;
-    }
-    .bleed-area {
-      position: absolute;
-      top: -3mm;
-      left: -3mm;
-      right: -3mm;
-      bottom: -3mm;
-      border: 1px dashed red;
-      pointer-events: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur d'Affiches Politiques</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #111f49;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(17, 31, 73, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111f49;
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.4;
+        }
+
+        .header > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.4rem;
+            opacity: 0.95;
+            font-weight: 400;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .form-content {
+            padding: 50px 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #111f49;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #38b6ff;
+            position: relative;
+            letter-spacing: -0.01em;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: #111f49;
+            border-radius: 2px;
+        }
+
+        /* Styles pour la sélection de designs */
+        .design-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .design-option {
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 3px solid #e2e8f0;
+            background: white;
+            box-shadow: 0 8px 25px rgba(17, 31, 73, 0.08);
+        }
+
+        .design-option:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(17, 31, 73, 0.15);
+            border-color: #38b6ff;
+        }
+
+        .design-option.selected {
+            border-color: #38b6ff;
+            box-shadow: 0 0 0 4px rgba(56, 182, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .design-preview {
+            aspect-ratio: 0.707;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .design-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .design-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .design-option:hover .design-overlay {
+            opacity: 1;
+        }
+
+        .design-option.selected .design-overlay {
+            opacity: 1;
+            background: rgba(56, 182, 255, 0.9);
+        }
+
+        .design-title {
+            padding: 20px 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #111f49;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+        }
+
+        /* Styles pour les champs de formulaire */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #111f49;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .form-group .optional {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #38b6ff;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(56, 182, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group input[type="file"] {
+            padding: 16px;
+            background: white;
+            border: 2px dashed #cbd5e0;
+            cursor: pointer;
+        }
+
+        .form-group input[type="file"]:hover {
+            border-color: #38b6ff;
+            background: #f0f9ff;
+        }
+
+        /* Styles pour les formats */
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .format-option {
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .format-option:hover {
+            border-color: #38b6ff;
+            background: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(56, 182, 255, 0.15);
+        }
+
+        .format-option.selected {
+            border-color: #38b6ff;
+            background: #38b6ff;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(56, 182, 255, 0.3);
+        }
+
+        .format-option input[type="radio"] {
+            display: none;
+        }
+
+        .format-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .format-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Styles pour les couleurs */
+        .color-selector-group {
+            display: flex;
+            gap: 25px;
+            margin-top: 15px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .color-input-group {
+            flex: 1;
+        }
+
+        .color-input-group label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #111f49;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .color-input-group input[type="color"] {
+            width: 70px;
+            height: 45px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .color-input-group input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .cmyk-inputs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .cmyk-inputs input {
+            padding: 10px 8px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* Bouton de génération */
+        .generate-section {
+            text-align: center;
+            padding: 60px 40px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .generate-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 5px;
+            background: #38b6ff;
+            border-radius: 3px;
+        }
+
+        .generate-btn {
+            background: #38b6ff;
+            color: white;
+            border: none;
+            padding: 22px 60px;
+            border-radius: 16px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 350px;
+            box-shadow: 0 8px 25px rgba(56, 182, 255, 0.25);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(56, 182, 255, 0.4);
+            background: #2ea3e8;
+        }
+
+        .generate-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Styles pour les infos */
+        .info-box {
+            background: #f0f9ff;
+            border: 2px solid #38b6ff;
+            border-radius: 12px;
+            padding: 20px;
+            color: #111f49;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(56, 182, 255, 0.1);
+        }
+
+        .required-indicator {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .design-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 40px 30px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-content {
+                padding: 40px 30px;
+            }
+            
+            .design-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .format-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .color-selector-group {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .design-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .format-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .generate-btn {
+                min-width: 280px;
+                padding: 20px 40px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
 
-<div class="wp-ballot-generator">
-  <h1>Générateur de Bulletins</h1>
 
-  <div class="form-group">
-    <label for="municipalCandidates">Liste des candidats (1 par ligne)</label>
-    <textarea id="municipalCandidates"></textarea>
-  </div>
+        <div class="form-content">
+            <form id="posterForm">
+                <!-- Sélection du design -->
+                <div class="section">
+                    <h2 class="section-title">1. Choisissez votre design <span class="required-indicator">*</span></h2>
+                    <div class="design-grid">
+                        <div class="design-option" data-design="1">
+                            <div class="design-preview">
+                                <img src="https://politicae.fr/wp-content/uploads/2025/09/1.jpg" alt="Design 1" class="design-img">
+                                <div class="design-overlay">✓ Sélectionné</div>
+                            </div>
+                            <div class="design-title">Design Moderne</div>
+                        </div>
+                        
+                        <div class="design-option" data-design="2">
+                            <div class="design-preview">
+                                <img src="https://politicae.fr/wp-content/uploads/2025/09/2.jpg" alt="Design 2" class="design-img">
+                                <div class="design-overlay">✓ Sélectionné</div>
+                            </div>
+                            <div class="design-title">Design Classique</div>
+                        </div>
+                        
+                        <div class="design-option" data-design="3">
+                            <div class="design-preview">
+                                <img src="https://politicae.fr/wp-content/uploads/2025/09/3.jpg" alt="Design 3" class="design-img">
+                                <div class="design-overlay">✓ Sélectionné</div>
+                            </div>
+                            <div class="design-title">Design Dynamique</div>
+                        </div>
+                        
+                        <div class="design-option" data-design="4">
+                            <div class="design-preview">
+                                <img src="https://politicae.fr/wp-content/uploads/2025/09/4.jpg" alt="Design 4" class="design-img">
+                                <div class="design-overlay">✓ Sélectionné</div>
+                            </div>
+                            <div class="design-title">Design Élégant</div>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        💡 <strong>Conseil :</strong> Choisissez le design qui correspond le mieux à votre image et à votre message politique.
+                    </div>
+                </div>
 
-  <div class="form-group">
-    <label for="logoUpload">Importer un logo</label>
-    <input type="file" id="logoUpload" accept="image/*">
-  </div>
+                <!-- Informations personnelles -->
+                <div class="section">
+                    <h2 class="section-title">2. Informations du candidat</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">Prénom <span class="required-indicator">*</span></label>
+                            <input type="text" id="firstName" name="firstName" placeholder="Ex: Marie" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName">Nom <span class="required-indicator">*</span></label>
+                            <input type="text" id="lastName" name="lastName" placeholder="Ex: Dupont" required>
+                        </div>
+                        
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="email">Adresse email <span class="required-indicator">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="Ex: marie.dupont@email.com" required>
+                            <div class="info-box">
+                                📧 <strong>Important :</strong> Cette adresse sera utilisée pour vous envoyer l'affiche finalisée et vous contacter si besoin.
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  <div id="formatInfo" class="hidden form-group">
-    Format recommandé : <span id="formatText"></span>
-  </div>
+                <!-- Messages et textes -->
+                <div class="section">
+                    <h2 class="section-title">3. Messages et textes</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="slogan">Slogan <span class="optional">(optionnel)</span></label>
+                            <input type="text" id="slogan" name="slogan" placeholder="Ex: Ensemble pour l'avenir">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="listName">Nom de la liste <span class="optional">(optionnel)</span></label>
+                            <input type="text" id="listName" name="listName" placeholder="Ex: Liste Citoyenne">
+                        </div>
+                        
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="customMessage">Message personnalisé <span class="optional">(optionnel)</span></label>
+                            <textarea id="customMessage" name="customMessage" placeholder="Promesses de campagne, message à la population..."></textarea>
+                            <div class="info-box">
+                                💬 <strong>Suggestions :</strong> Promesses de campagne, vision pour la commune, message à la population, priorités politiques...
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  <div class="form-group">
-    <button onclick="generatePDF()">📄 Générer PDF</button>
-    <button onclick="printBallot()">🖨️ Imprimer</button>
-    <button onclick="resetForm()">♻️ Réinitialiser</button>
-  </div>
+                <!-- Images et logos -->
+                <div class="section">
+                    <h2 class="section-title">4. Images et logos</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="backgroundPhoto">Photo de fond <span class="required-indicator">*</span></label>
+                            <input type="file" id="backgroundPhoto" name="backgroundPhoto" accept="image/*" required>
+                            <div class="info-box">
+                                📸 Une photo de grande taille et de bonne qualité, si possible réalisée par un professionnel.
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="listLogo">Logo de la liste <span class="optional">(optionnel)</span></label>
+                            <input type="file" id="listLogo" name="listLogo" accept="image/*">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="partyLogo">Logo du parti politique <span class="optional">(optionnel)</span></label>
+                            <input type="file" id="partyLogo" name="partyLogo" accept="image/*">
+                        </div>
+                    </div>
+                </div>
 
-  <div id="ballotPreview">
-    <div id="ballot"></div>
-  </div>
-</div>
+                <!-- Format -->
+                <div class="section">
+                    <h2 class="section-title">5. Format d'impression</h2>
+                    <div class="format-grid">
+                        <label class="format-option selected" for="formatA1">
+                            <input type="radio" id="formatA1" name="format" value="a1" checked>
+                            <div class="format-title">A1</div>
+                            <div class="format-desc">594 × 841 mm<br>Format officiel</div>
+                        </label>
+                        
+                        <label class="format-option" for="formatA2">
+                            <input type="radio" id="formatA2" name="format" value="a2">
+                            <div class="format-title">A2</div>
+                            <div class="format-desc">420 × 594 mm<br>Format moyen</div>
+                        </label>
+                        
+                        <label class="format-option" for="formatA3">
+                            <input type="radio" id="formatA3" name="format" value="a3">
+                            <div class="format-title">A3</div>
+                            <div class="format-desc">297 × 420 mm<br>Format compact</div>
+                        </label>
+                        
+                        <label class="format-option" for="formatA4">
+                            <input type="radio" id="formatA4" name="format" value="a4">
+                            <div class="format-title">A4</div>
+                            <div class="format-desc">210 × 297 mm<br>Format standard</div>
+                        </label>
+                    </div>
+                </div>
 
-<script>
-let isDragging = false;
-let isResizing = false;
-let dragOffset = { x: 0, y: 0 };
-let resizeStartSize = { width: 0, height: 0 };
-let resizeStartPos = { x: 0, y: 0 };
+                <!-- Couleurs -->
+                <div class="section">
+                    <h2 class="section-title">6. Couleurs personnalisées <span class="optional">(optionnel)</span></h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Couleur principale</label>
+                            <div class="color-selector-group">
+                                <div class="color-input-group">
+                                    <label for="color1RGB">RVB</label>
+                                    <input type="color" id="color1RGB" name="color1RGB" value="#111f49">
+                                    <input type="text" id="color1RGBText" placeholder="#111f49" value="#111f49">
+                                </div>
+                                <div class="color-input-group">
+                                    <label for="color1CMYK">CMJN</label>
+                                    <div class="cmyk-inputs">
+                                        <input type="number" id="color1C" placeholder="C" min="0" max="100" value="85">
+                                        <input type="number" id="color1M" placeholder="M" min="0" max="100" value="75">
+                                        <input type="number" id="color1Y" placeholder="J" min="0" max="100" value="0">
+                                        <input type="number" id="color1K" placeholder="N" min="0" max="100" value="71">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Couleur secondaire</label>
+                            <div class="color-selector-group">
+                                <div class="color-input-group">
+                                    <label for="color2RGB">RVB</label>
+                                    <input type="color" id="color2RGB" name="color2RGB" value="#38b6ff">
+                                    <input type="text" id="color2RGBText" placeholder="#38b6ff" value="#38b6ff">
+                                </div>
+                                <div class="color-input-group">
+                                    <label for="color2CMYK">CMJN</label>
+                                    <div class="cmyk-inputs">
+                                        <input type="number" id="color2C" placeholder="C" min="0" max="100" value="78">
+                                        <input type="number" id="color2M" placeholder="M" min="0" max="100" value="29">
+                                        <input type="number" id="color2Y" placeholder="J" min="0" max="100" value="0">
+                                        <input type="number" id="color2K" placeholder="N" min="0" max="100" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Couleur d'accent</label>
+                            <div class="color-selector-group">
+                                <div class="color-input-group">
+                                    <label for="color3RGB">RVB</label>
+                                    <input type="color" id="color3RGB" name="color3RGB" value="#ffffff">
+                                    <input type="text" id="color3RGBText" placeholder="#ffffff" value="#ffffff">
+                                </div>
+                                <div class="color-input-group">
+                                    <label for="color3CMYK">CMJN</label>
+                                    <div class="cmyk-inputs">
+                                        <input type="number" id="color3C" placeholder="C" min="0" max="100" value="0">
+                                        <input type="number" id="color3M" placeholder="M" min="0" max="100" value="0">
+                                        <input type="number" id="color3Y" placeholder="J" min="0" max="100" value="0">
+                                        <input type="number" id="color3K" placeholder="N" min="0" max="100" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        🎨 <strong>Conseil :</strong> Utilisez les valeurs RVB pour l'aperçu numérique et les impressions en petite quantité (moins de 1000 impressions). Les valeurs CMJN sont recommandées pour l'impression professionnelle en grande quantité.
+                    </div>
+                </div>
 
-document.getElementById("logoUpload").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = evt => addImageToBallot(evt.target.result);
-  reader.readAsDataURL(file);
-});
+            </form>
+        </div>
 
-function addImageToBallot(src) {
-  const ballot = document.getElementById("ballot");
-  ballot.innerHTML = ""; // reset preview
-  const img = document.createElement("img");
-  img.id = "ballotImage";
-  img.src = src;
-  img.onload = () => setupImage(img);
-  ballot.appendChild(img);
-}
+        <div class="generate-section">
+            <button type="submit" form="posterForm" class="generate-btn" id="generateBtn">
+                📧 Envoyer mes demandes
+            </button>
+        </div>
+    </div>
 
-function setupImage(img) {
-  const naturalRatio = img.naturalWidth / img.naturalHeight;
-  const baseWidth = 100;
-  const proportionalHeight = Math.round(baseWidth / naturalRatio);
-  img.style.width = baseWidth + "px";
-  img.style.height = proportionalHeight + "px";
-  img.style.left = "20px";
-  img.style.top = "20px";
+    <script>
+        let selectedDesign = null;
+        let backgroundImageData = null;
+        let listLogoData = null;
+        let partyLogoData = null;
 
-  const resizeHandle = document.createElement("div");
-  resizeHandle.className = "resize-handle";
-  resizeHandle.id = "resizeHandle";
-  document.getElementById("ballot").appendChild(resizeHandle);
+        // Gestion de la sélection de design
+        document.querySelectorAll('.design-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Retirer la sélection précédente
+                document.querySelectorAll('.design-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Ajouter la sélection à l'option cliquée
+                this.classList.add('selected');
+                selectedDesign = this.dataset.design;
+            });
+        });
 
-  img.addEventListener("mousedown", startDrag);
-  resizeHandle.addEventListener("mousedown", startResize);
-  updateResizeHandlePosition();
-}
+        // Gestion des formats
+        document.querySelectorAll('input[name="format"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.format-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                this.parentElement.classList.add('selected');
+            });
+        });
 
-function updateResizeHandlePosition() {
-  const img = document.getElementById("ballotImage");
-  const handle = document.getElementById("resizeHandle");
-  if (img && handle) {
-    handle.style.left = img.offsetLeft + img.offsetWidth - 10 + "px";
-    handle.style.top = img.offsetTop + img.offsetHeight - 10 + "px";
-  }
-}
+        // Synchronisation des couleurs RVB et texte
+        function syncColorInputs() {
+            // Couleur 1
+            document.getElementById('color1RGB').addEventListener('input', function() {
+                document.getElementById('color1RGBText').value = this.value;
+            });
+            document.getElementById('color1RGBText').addEventListener('input', function() {
+                if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                    document.getElementById('color1RGB').value = this.value;
+                }
+            });
+            
+            // Couleur 2
+            document.getElementById('color2RGB').addEventListener('input', function() {
+                document.getElementById('color2RGBText').value = this.value;
+            });
+            document.getElementById('color2RGBText').addEventListener('input', function() {
+                if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                    document.getElementById('color2RGB').value = this.value;
+                }
+            });
+            
+            // Couleur 3
+            document.getElementById('color3RGB').addEventListener('input', function() {
+                document.getElementById('color3RGBText').value = this.value;
+            });
+            document.getElementById('color3RGBText').addEventListener('input', function() {
+                if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                    document.getElementById('color3RGB').value = this.value;
+                }
+            });
+        }
+        
+        syncColorInputs();
 
-function startDrag(e) {
-  if (isResizing) return;
-  isDragging = true;
-  const img = e.target;
-  dragOffset.x = e.clientX - img.getBoundingClientRect().left;
-  dragOffset.y = e.clientY - img.getBoundingClientRect().top;
-  document.addEventListener("mousemove", drag);
-  document.addEventListener("mouseup", stopDrag);
-  e.preventDefault();
-}
-function drag(e) {
-  if (!isDragging) return;
-  const img = document.getElementById("ballotImage");
-  const ballot = document.getElementById("ballot");
-  let newX = e.clientX - ballot.getBoundingClientRect().left - dragOffset.x;
-  let newY = e.clientY - ballot.getBoundingClientRect().top - dragOffset.y;
-  newX = Math.max(0, Math.min(newX, ballot.offsetWidth - img.offsetWidth));
-  newY = Math.max(0, Math.min(newY, ballot.offsetHeight - img.offsetHeight));
-  img.style.left = newX + "px";
-  img.style.top = newY + "px";
-  updateResizeHandlePosition();
-}
-function stopDrag() {
-  isDragging = false;
-  document.removeEventListener("mousemove", drag);
-  document.removeEventListener("mouseup", stopDrag);
-}
+        // Gestion des uploads d'images
+        document.getElementById('backgroundPhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    backgroundImageData = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-function startResize(e) {
-  isResizing = true;
-  const img = document.getElementById("ballotImage");
-  resizeStartSize.width = img.offsetWidth;
-  resizeStartSize.height = img.offsetHeight;
-  resizeStartPos.x = e.clientX;
-  resizeStartPos.y = e.clientY;
-  document.addEventListener("mousemove", resize);
-  document.addEventListener("mouseup", stopResize);
-  e.preventDefault();
-}
-function resize(e) {
-  if (!isResizing) return;
-  const img = document.getElementById("ballotImage");
-  const deltaX = e.clientX - resizeStartPos.x;
-  const aspectRatio = resizeStartSize.width / resizeStartSize.height;
-  let newWidth = resizeStartSize.width + deltaX;
-  let newHeight = newWidth / aspectRatio;
-  img.style.width = Math.max(30, newWidth) + "px";
-  img.style.height = Math.max(30, newHeight) + "px";
-  updateResizeHandlePosition();
-}
-function stopResize() {
-  isResizing = false;
-  document.removeEventListener("mousemove", resize);
-  document.removeEventListener("mouseup", stopResize);
-}
+        document.getElementById('listLogo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    listLogoData = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-async function generatePDF() {
-  const ballot = document.getElementById("ballot");
-  const canvas = await html2canvas(ballot);
-  const imgData = canvas.toDataURL("image/png");
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("l", "mm", "a5");
-  pdf.addImage(imgData, "PNG", 0, 0, 210, 148);
-  pdf.save("bulletin.pdf");
-}
-function printBallot() {
-  window.print();
-}
-function resetForm() {
-  document.getElementById("municipalCandidates").value = "";
-  document.getElementById("logoUpload").value = "";
-  document.getElementById("ballot").innerHTML = "";
-}
-</script>
+        document.getElementById('partyLogo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    partyLogoData = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-</body>
+        // Gestion de la soumission du formulaire
+        document.getElementById('posterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Vérifications
+            if (!selectedDesign) {
+                alert('Veuillez sélectionner un design');
+                return;
+            }
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            if (!firstName || !lastName) {
+                alert('Veuillez saisir le prénom et le nom du candidat');
+                return;
+            }
+            
+            if (!email) {
+                alert('Veuillez saisir votre adresse email');
+                return;
+            }
+            
+            if (!backgroundImageData) {
+                alert('Veuillez sélectionner une photo de fond');
+                return;
+            }
+            
+            sendEmailRequest();
+        });
+
+        async function sendEmailRequest() {
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            generateBtn.textContent = '📤 Envoi en cours...';
+            
+            try {
+                // Création du FormData pour Formspree
+                const formData = new FormData();
+                
+                // Ajout des champs de base
+                formData.append('design', selectedDesign);
+                formData.append('firstName', document.getElementById('firstName').value.trim());
+                formData.append('lastName', document.getElementById('lastName').value.trim());
+                formData.append('email', document.getElementById('email').value.trim());
+                formData.append('slogan', document.getElementById('slogan').value.trim());
+                formData.append('listName', document.getElementById('listName').value.trim());
+                formData.append('customMessage', document.getElementById('customMessage').value.trim());
+                formData.append('format', document.querySelector('input[name="format"]:checked').value);
+                
+                // Couleurs
+                formData.append('color1RGB', document.getElementById('color1RGBText').value);
+                formData.append('color1CMYK', `C:${document.getElementById('color1C').value} M:${document.getElementById('color1M').value} J:${document.getElementById('color1Y').value} N:${document.getElementById('color1K').value}`);
+                formData.append('color2RGB', document.getElementById('color2RGBText').value);
+                formData.append('color2CMYK', `C:${document.getElementById('color2C').value} M:${document.getElementById('color2M').value} J:${document.getElementById('color2Y').value} N:${document.getElementById('color2K').value}`);
+                formData.append('color3RGB', document.getElementById('color3RGBText').value);
+                formData.append('color3CMYK', `C:${document.getElementById('color3C').value} M:${document.getElementById('color3M').value} J:${document.getElementById('color3Y').value} N:${document.getElementById('color3K').value}`);
+                
+                // Ajout des fichiers si disponibles
+                if (document.getElementById('backgroundPhoto').files[0]) {
+                    formData.append('backgroundPhoto', document.getElementById('backgroundPhoto').files[0]);
+                }
+                if (document.getElementById('listLogo').files[0]) {
+                    formData.append('listLogo', document.getElementById('listLogo').files[0]);
+                }
+                if (document.getElementById('partyLogo').files[0]) {
+                    formData.append('partyLogo', document.getElementById('partyLogo').files[0]);
+                }
+                
+                // Envoi vers Formspree
+                const response = await fetch('https://formspree.io/f/mpwyajen', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    generateBtn.textContent = '✅ Envoyé avec succès !';
+                    generateBtn.style.background = '#10b981';
+                    
+                    // Afficher un message de succès
+                    alert('🎉 Votre demande a été envoyée avec succès ! Notre équipe vous contactera sous 24-48h pour finaliser votre affiche.');
+                    
+                    // Optionnel : réinitialiser le formulaire après succès
+                    setTimeout(() => {
+                        if (confirm('Voulez-vous créer une nouvelle demande ?')) {
+                            location.reload();
+                        }
+                    }, 2000);
+                        
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erreur lors de l\'envoi');
+                }
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                generateBtn.textContent = '❌ Erreur d\'envoi';
+                generateBtn.style.background = '#dc2626';
+                
+                // Fallback vers mailto en cas d'erreur
+                alert('⚠️ Erreur technique. Redirection vers votre client email...');
+                
+                const emailSubject = `Demande de création d'affiche - ${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`;
+                const emailBody = `Veuillez joindre vos images à cet email.\n\nInformations de la demande :\n- Design : ${selectedDesign}\n- Nom : ${document.getElementById('firstName').value} ${document.getElementById('lastName').value}\n- Email : ${document.getElementById('email').value}\n- Format : ${document.querySelector('input[name="format"]:checked').value}\n- Slogan : ${document.getElementById('slogan').value}\n- Liste : ${document.getElementById('listName').value}`;
+                
+                const mailtoLink = `mailto:communication@politicae.fr?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+                window.open(mailtoLink, '_blank');
+                
+                // Réinitialiser le bouton après un délai
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '📧 Envoyer mes demandes';
+                    generateBtn.style.background = '#38b6ff';
+                }, 3000);
+            }
+        }
+
+        // Sélectionner le premier design par défaut
+        document.querySelector('.design-option[data-design="1"]').click();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9831eb2433edd0a6',t:'MTc1ODU0NTMyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
